@@ -1,27 +1,54 @@
-// Wait until the DOM is fully loaded
+// Page flip navigation functionality
+
 document.addEventListener('DOMContentLoaded', () => {
-  // Select all sections in the main content to animate
-  const animatedSections = document.querySelectorAll('main section');
+  const pages = document.querySelectorAll('.page');
+  const prevButton = document.getElementById('prev-page');
+  const nextButton = document.getElementById('next-page');
+  let currentPage = 0;
 
-  // Define observer options: using the viewport and a threshold of 10%
-  const options = {
-    root: null,
-    threshold: 0.1
-  };
+  function showPage(index) {
+    if (index < 0 || index >= pages.length) return;
+    pages[currentPage].classList.remove('active');
+    currentPage = index;
+    pages[currentPage].classList.add('active');
+  }
 
-  // Create an IntersectionObserver to detect when sections come into view
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        // When the section enters the viewport, add the 'in-view' class to trigger CSS animations
-        entry.target.classList.add('in-view');
-      } else {
-        // When the section leaves the viewport, remove the 'in-view' class
-        entry.target.classList.remove('in-view');
+  prevButton.addEventListener('click', () => {
+    if (currentPage > 0) {
+      showPage(currentPage - 1);
+    }
+  });
+
+  nextButton.addEventListener('click', () => {
+    if (currentPage < pages.length - 1) {
+      showPage(currentPage + 1);
+    }
+  });
+
+  // Swipe gesture support for mobile devices
+  let touchStartX = null;
+  let touchEndX = null;
+
+  function handleGesture() {
+    if (touchStartX === null || touchEndX === null) return;
+    const diffX = touchStartX - touchEndX;
+    if (Math.abs(diffX) > 50) { // swipe threshold
+      if (diffX > 0 && currentPage < pages.length - 1) {
+        showPage(currentPage + 1);
+      } else if (diffX < 0 && currentPage > 0) {
+        showPage(currentPage - 1);
       }
-    });
-  }, options);
+    }
+    touchStartX = null;
+    touchEndX = null;
+  }
 
-  // Observe each section for visibility changes
-  animatedSections.forEach(section => observer.observe(section));
+  document.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+  });
+
+  document.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleGesture();
+  });
 });
